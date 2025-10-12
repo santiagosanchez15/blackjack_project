@@ -37,8 +37,9 @@ def great():
     print(f"Perfect {player1.name}, Welcome, the BlackJack table is right this way...")
     return 0
 
-def draw_cards(list_cards):
+def draw_cards():
     '''Draws a random card'''
+    list_cards = ["A", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"]
     return random.choice(list_cards)
 
 def Ace_checker():
@@ -83,30 +84,61 @@ def player_count(player):
     return total_value
 
 
-def blackjack(player):
+def players_game(player):
     '''Black Jack Game'''
-    # Set list of cards
-    list_cards = ["A", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"]
-
     # First movement
-    player_first_card = draw_cards(list_cards)
-    player_second_card = draw_cards(list_cards)
+    player_first_card = draw_cards()
+    player_second_card = draw_cards()
     print(f"Oh you got a {player_first_card} and a {player_second_card}")
     player.cards = [player_first_card, player_second_card]
+
     return player_count(player)
     
-def house_dealer(house):
+def house_dealer_game(house):
     '''Retyrn the house cards'''
     # Set basic actions
-    list_cards = ["A", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"]
-    house_first_card = draw_cards(list_cards)
-    house_second_card = draw_cards(list_cards)
+    house_first_card = draw_cards()
+    house_second_card = draw_cards()
     print(f"Oh the house got a {house_first_card} and a {house_second_card}")
     house.cards = [house_first_card, house_second_card]
 
     return house_count(house)
     
 
-casino_royale = House
-print(house_dealer(casino_royale))
+def blackjack_player(player):
+    '''Handles, secodn round for player'''
+    if player.total > 21:
+        return f"You have {player.total} you lost"
+
+    user_input = input(f"Your total is: {player.total}, Do you want another card? ")
+
+    while user_input.upper() not in ["YES", 'NO']:
+        user_input = input("Please only Yes or No. Do you want another card? ")
+    
+    if user_input.upper() == "YES":
+        player_new_card = draw_cards()
+        print(f"You drew a {player_new_card}")
+        player.total += player_count(player_new_card)
+            
+        return blackjack_player(player)
+
+    elif user_input.upper() == "NO":
+        return f"You have {player.total}"
+
+
+def blackjack_dealer(house):
+    '''Handles, second round for dealer'''
+
+    if house.total > 21:
+        return f"The dealer has {house.total}, the house lost!"
+    
+    elif house.total < 17:
+        dealer_draw = draw_cards()
+        print(f"THe house drew a {dealer_draw}")
+        house.total += house_count(dealer_draw)
+
+        return blackjack_dealer(house)
+    
+    else: 
+        return house.total
 
