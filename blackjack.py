@@ -15,6 +15,28 @@ class Player:
     def __repr__(self):
         return f"This is {self.name} and this player has ${self.wallet} in his wallet.\nThe amount of times {self.name} has won are {self.wins} and the amount of times that {self.name} has lost are {self.loses} times"
 
+    def bet(self, house):
+        '''Method to make the user bet'''
+        print(f"You have ${self.wallet}")
+        user_bet = float(input("How much do you want to bet on blackjack: "))
+        if user_bet > self.wallet:
+            print("You Dont have enough money")
+            return self.bet(house)
+        elif self.wallet == 0:
+            return 1
+
+        results = blackjack(self, house)
+        if results == True:
+            self.wallet += user_bet * 2
+            print(f"You made ${user_bet * 2}")
+            return 0
+        if results == 0:
+            print("Its a draw, no one wins")
+            return 0
+        else:
+            self.wallet = self.wallet - user_bet
+            return f"You lost ${user_bet}"
+
 class House:
     '''Class House menaing casino'''
     def __init__(self, name = "The House", wins = 0, loses = 0, cards = None, total = 0):
@@ -160,32 +182,68 @@ def blackjack_dealer(house):
     else: 
         return house.total
 
-def blackjack():
+def blackjack(player1, casino):
     '''returns wether the player won or lost'''
 
-    player1 = great()
-    casino = House("Caino Royale")
-
+    # Chck first round of blackjack
     player1.total = players_game(player1)
     casino.total = house_dealer_game(casino)
 
+    # Checks second round of blackjack
     player1.total = blackjack_player(player1)
     casino.total = blackjack_dealer(casino)
 
+    # Chceck all possible outocmes
     if player1.total > 21:
         print("Sorry you lost")
         return False 
+    
+    elif player1.total > 21 and casino.total > 21:
+        return 0
+    
+    elif player1.total == casino.total:
+        return 0
 
     elif player1.total > casino.total or casino.total > 21:
         print("You won")
         return True
     
-    elif player1.total == casino.total:
-        return 0
-    
     else:
         print("You lost")
         return False
     
+def main():
+    '''Main function'''
+
+    # Initial user inputs
+    player1 = great()
+    casino = House("Casino Royale")
+    player1.wallet = float(input("How mcuch money is in your wallet? "))
+
+    # play the first round
+    result = player1.bet(casino)
+    # Check if bet is greater than wallet
+    if result == 1:
+        return "You dont have enough moeny, get out of here"
+        
+    print(f"You have {player1.wallet} in your wallet")
+    keep_playing = input("Do you want to keep playing? ")
+
+    # Check for valid input
+    while keep_playing.upper() not in ["YES", "NO"]:
+        print("Please select valid input. Yes or no")
+        keep_playing = input("Do you want to keep playing? ")
     
-    
+    while keep_playing.upper() == "YES":
+        player1.bet(casino)
+        keep_playing = input("Do you want to keep playing? ")
+        while keep_playing.upper() not in ["YES", "NO"]:
+            print("Please select valid input. Yes or no")
+            keep_playing = input("Do you want to keep playing? ")
+        if player1.wallet <= 0: 
+            return "You have no money, get out of here"
+
+    if keep_playing.upper() == "NO":
+        return f"Your final wallet is: {player1.wallet}"
+
+main()
