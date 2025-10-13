@@ -2,13 +2,14 @@ import random
 
 class Player:
     '''Defaul player class'''
-    def __init__(self, name = "player", wallet = 20, wins = 0, loses = 0, cards = None):
+    def __init__(self, name = "player", wallet = 20, wins = 0, loses = 0, cards = None, total = 0):
         ''' Define players attributes'''
         self.name = name
         self.wallet = wallet
         self.wins = wins
         self.loses = loses
         self.cards = cards if cards is not None else []
+        self.total = total
         
 
     def __repr__(self):
@@ -16,12 +17,13 @@ class Player:
 
 class House:
     '''Class House menaing casino'''
-    def __init__(self, name = "The House", wins = 0, loses = 0, cards = None):
+    def __init__(self, name = "The House", wins = 0, loses = 0, cards = None, total = 0):
         '''Define House attributes'''
         self.name = name
         self.wins = wins
         self.loses = loses
         self.cards = cards if cards is not None else []
+        self.total = total
 
     def __repr__(self):
         '''House description'''
@@ -35,7 +37,7 @@ def great():
     player1 = Player()
     player1.name = input("Oh, see your name is: ")
     print(f"Perfect {player1.name}, Welcome, the BlackJack table is right this way...")
-    return 0
+    return player1
 
 def draw_cards():
     '''Draws a random card'''
@@ -87,58 +89,103 @@ def player_count(player):
 def players_game(player):
     '''Black Jack Game'''
     # First movement
+    player.total = 0
     player_first_card = draw_cards()
     player_second_card = draw_cards()
     print(f"Oh you got a {player_first_card} and a {player_second_card}")
     player.cards = [player_first_card, player_second_card]
+    total = player_count(player)
+    print(f"Your total is {total}")
 
-    return player_count(player)
+    return total
     
 def house_dealer_game(house):
     '''Retyrn the house cards'''
     # Set basic actions
+    house.total = 0
     house_first_card = draw_cards()
     house_second_card = draw_cards()
     print(f"Oh the house got a {house_first_card} and a {house_second_card}")
     house.cards = [house_first_card, house_second_card]
+    total = house_count(house)
+    print(f"The house total is {total}")
 
-    return house_count(house)
+    return total
     
 
 def blackjack_player(player):
     '''Handles, secodn round for player'''
     if player.total > 21:
-        return f"You have {player.total} you lost"
+        return player.total
 
-    user_input = input(f"Your total is: {player.total}, Do you want another card? ")
+    user_input = input(f"Your total is {player.total}. Do you want another card? ")
 
+    # Check valid user input
     while user_input.upper() not in ["YES", 'NO']:
         user_input = input("Please only Yes or No. Do you want another card? ")
     
+    # get more cards
     if user_input.upper() == "YES":
-        player_new_card = draw_cards()
-        print(f"You drew a {player_new_card}")
-        player.total += player_count(player_new_card)
-            
+        player.new_card = draw_cards()
+        print(f"You drew a {player.new_card}")
+        player.cards.append(player.new_card)
+        player.total = player_count(player)
+
         return blackjack_player(player)
 
+    # return the total value
     elif user_input.upper() == "NO":
-        return f"You have {player.total}"
+        return player.total
 
 
 def blackjack_dealer(house):
     '''Handles, second round for dealer'''
 
+    print(f"The house total is {house.total}")
+    # Check house is no more than 21
     if house.total > 21:
-        return f"The dealer has {house.total}, the house lost!"
+        return house.total
     
+    
+    # if less than 17 keep going
     elif house.total < 17:
-        dealer_draw = draw_cards()
-        print(f"THe house drew a {dealer_draw}")
-        house.total += house_count(dealer_draw)
+        house.new_draw = draw_cards()
+        print(f"The house drew a {house.new_draw}")
+        house.cards.append(house.new_draw)
+        house.total = house_count(house)
 
+        # Recursion to eithe get another card or return
         return blackjack_dealer(house)
     
     else: 
         return house.total
 
+def blackjack():
+    '''returns wether the player won or lost'''
+
+    player1 = great()
+    casino = House("Caino Royale")
+
+    player1.total = players_game(player1)
+    casino.total = house_dealer_game(casino)
+
+    player1.total = blackjack_player(player1)
+    casino.total = blackjack_dealer(casino)
+
+    if player1.total > 21:
+        print("Sorry you lost")
+        return False 
+
+    elif player1.total > casino.total or casino.total > 21:
+        print("You won")
+        return True
+    
+    elif player1.total == casino.total:
+        return 0
+    
+    else:
+        print("You lost")
+        return False
+    
+    
+    
