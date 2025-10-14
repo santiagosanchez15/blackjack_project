@@ -19,23 +19,38 @@ class Player:
         '''Method to make the user bet'''
         print(f"You have ${self.wallet}")
         user_bet = float(input("How much do you want to bet on blackjack: "))
-        if user_bet > self.wallet:
+
+        # Handle no money or no valid input
+        if self.wallet <= 0:
+            return 1
+        elif user_bet > self.wallet:
             print("You Dont have enough money")
             return self.bet(house)
-        elif self.wallet == 0:
-            return 1
-
+        elif user_bet <= 0:
+            print("Your bet must be a positive integer")
+            return self.bet(house)
+        
+        # Handle the game it self
         results = blackjack(self, house)
-        if results == True:
-            self.wallet += user_bet * 2
-            print(f"You made ${user_bet * 2}")
+        if results is True: #Player wins
+            self.wallet += user_bet
+            print(f"You made ${user_bet}")
+            self.wins += 1
+            house.loses += 1
+            return 
+        
+        elif results is False: #Player loses 
+            self.wallet -= user_bet
+            self.loses += 1
+            house.wins += 1
+            print(f"House wins. You lost ${user_bet}")
             return 0
-        if results == 0:
+
+        elif results == 0: #its a draw
             print("Its a draw, no one wins")
             return 0
-        else:
-            self.wallet = self.wallet - user_bet
-            return f"You lost ${user_bet}"
+        
+        
 
 class House:
     '''Class House menaing casino'''
@@ -87,8 +102,8 @@ def house_count(house):
     deck_cards = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, "J": 10, "Q": 10, "K": 10, 11: 11}
     for card in house.cards:
         if card == "A":
-                card = Ace_house_checker(total_value)
-                total_value += deck_cards[card]
+                ace_value = Ace_house_checker(total_value)
+                total_value += deck_cards[ace_value]
         elif card in deck_cards:
             total_value += deck_cards[card]
     return total_value
@@ -101,8 +116,8 @@ def player_count(player):
     deck_cards = {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, "J": 10, "Q": 10, "K": 10, 11: 11}
     for card in player.cards:
         if card == "A":
-                card = Ace_checker()
-                total_value += deck_cards[card]
+                ace_value = Ace_checker()
+                total_value += deck_cards[ace_value]
         elif card in deck_cards:
             total_value += deck_cards[card]
     return total_value
@@ -111,6 +126,7 @@ def player_count(player):
 def players_game(player):
     '''Black Jack Game'''
     # First movement
+    player.cards = [] # resets the cards
     player.total = 0
     player_first_card = draw_cards()
     player_second_card = draw_cards()
@@ -124,6 +140,7 @@ def players_game(player):
 def house_dealer_game(house):
     '''Retyrn the house cards'''
     # Set basic actions
+    house.cards = [] #resets the cards
     house.total = 0
     house_first_card = draw_cards()
     house_second_card = draw_cards()
@@ -157,6 +174,7 @@ def blackjack_player(player):
 
     # return the total value
     elif user_input.upper() == "NO":
+        player.total = player_count(player)
         return player.total
 
 
@@ -191,58 +209,79 @@ def blackjack(player1, casino):
 
     # Checks second round of blackjack
     player1.total = blackjack_player(player1)
+
+    
+
+    # House tourn to take a card
     casino.total = blackjack_dealer(casino)
 
     # Chceck all possible outocmes
-    if player1.total > 21:
-        print("Sorry you lost")
+
+    # both above 21
+    if casino.total > 21 and player1.total > 21:
+        return 0
+    
+    # Check if player exceed 21
+    elif player1.total > 21:
         return False 
     
-    elif player1.total > 21 and casino.total > 21:
-        return 0
-    
+    elif casino.total > 21:
+        return True
+
+    # player and casino have the same number | Draw
     elif player1.total == casino.total:
         return 0
-
-    elif player1.total > casino.total or casino.total > 21:
-        print("You won")
+    
+    # Player have higher cards than casino | Player wins
+    elif player1.total > casino.total:
         return True
     
-    else:
-        print("You lost")
+    # House higher card than player | House wins
+    else :
         return False
     
+
 def main():
     '''Main function'''
 
     # Initial user inputs
     player1 = great()
     casino = House("Casino Royale")
-    player1.wallet = float(input("How mcuch money is in your wallet? "))
+    player1.wallet = float(input("How much money is in your wallet? "))
 
     # play the first round
+    print("\n--- NEW ROUND ---")
     result = player1.bet(casino)
     # Check if bet is greater than wallet
     if result == 1:
         return "You dont have enough moeny, get out of here"
         
     print(f"You have {player1.wallet} in your wallet")
-    keep_playing = input("Do you want to keep playing? ")
-
-    # Check for valid input
-    while keep_playing.upper() not in ["YES", "NO"]:
-        print("Please select valid input. Yes or no")
-        keep_playing = input("Do you want to keep playing? ")
+    
+    keep_playing = "YES"
     
     while keep_playing.upper() == "YES":
-        player1.bet(casino)
+        print("\n--- NEW ROUND ---")
+
+        if player1.wallet <= 0:
+            return "You dont have enough moeny, get out of here"
+
+        # Play the next round
+        result = player1.bet(casino)
+
+        # User ran out of money
+        if player1.wallet <= 0 or result == 1:
+            return "You dont have enough moeny, get out of here"
+
+        # Play another round
         keep_playing = input("Do you want to keep playing? ")
+
+        # Chck for valid input
         while keep_playing.upper() not in ["YES", "NO"]:
             print("Please select valid input. Yes or no")
             keep_playing = input("Do you want to keep playing? ")
-        if player1.wallet <= 0: 
-            return "You have no money, get out of here"
-
+        
+    # Exit message
     if keep_playing.upper() == "NO":
         return f"Your final wallet is: {player1.wallet}"
 
