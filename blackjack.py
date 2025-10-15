@@ -46,7 +46,7 @@ class Player:
             print(f"House wins. You lost ${user_bet}")
             return 0
 
-        elif results == 0: #its a draw
+        elif results == None: #its a draw
             print("Its a draw, no one wins")
             return 0
         
@@ -219,7 +219,7 @@ def blackjack(player1, casino):
 
     # both above 21
     if casino.total > 21 and player1.total > 21:
-        return 0
+        return None
     
     # Check if player exceed 21
     elif player1.total > 21:
@@ -230,7 +230,7 @@ def blackjack(player1, casino):
 
     # player and casino have the same number | Draw
     elif player1.total == casino.total:
-        return 0
+        return None
     
     # Player have higher cards than casino | Player wins
     elif player1.total > casino.total:
